@@ -50,3 +50,9 @@ class Retrieval:
         with open(file_json, "r") as file:
             data = json.load(file)
         return data
+    def search(self, text):
+        text = self.translate(text)
+        text_features = self.model_nomic.encode(text).reshape(1, -1)
+        self.rerank_index 
+        
+        return
