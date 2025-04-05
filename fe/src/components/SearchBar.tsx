@@ -32,7 +32,7 @@ const SearchBar = ({
         display: "flex",
         alignItems: "center",
         gap: 1,
-        maxWidth: 400,
+        width: "50vw",
       }}
     >
       <Input
