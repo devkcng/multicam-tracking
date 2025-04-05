@@ -16,7 +16,7 @@ class Retrieval:
     def __init__(self, device, rerank_bin_file: str = None):
             # Ensure that bin_files and modes lists have the same length
             # Initialize re-ranking index if provided
-            self.rerank_index = self.load_bin_file("/kaggle/input/binomic/kaggle/working/faiss_nomic_cosine.bin") 
+            self.rerank_index = self.load_bin_file("/kaggle/input/binomic/binnomic/kaggle/working/faiss_nomic_cosine.bin") 
             self.translate = Translation()
             
             self.device = device
