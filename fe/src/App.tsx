@@ -1,5 +1,6 @@
 import { Box, Typography } from "@mui/joy";
 import SearchBar from "./components/SearchBar";
+import VideoCard from "./components/VideoCard";
 
 function App() {
   return (
@@ -20,7 +21,7 @@ function App() {
         <Box
           sx={{
             width: "80vw",
-            height: "80vh",
+            height: "auto",
             border: "1px solid black",
             borderRadius: "lg",
             display: "flex",
@@ -31,6 +32,21 @@ function App() {
           }}
         >
           <SearchBar onSearch={() => {}} initialValue=""></SearchBar>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 2,
+              padding: 2,
+              justifyContent: "center",
+            }}
+          >
+            <VideoCard></VideoCard>
+            <VideoCard></VideoCard>
+            <VideoCard></VideoCard>
+            <VideoCard></VideoCard>
+            <VideoCard></VideoCard>
+          </Box>
         </Box>
       </Box>
     </>
