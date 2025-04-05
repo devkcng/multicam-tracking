@@ -69,7 +69,7 @@ const VideoCard = ({
       onClick={handleCardClick} // Chỉ xử lý phóng to
       sx={{
         minWidth: isSelected ? "80vw" : 300,
-        minHeight: isSelected ? "75vh" : 200,
+        minHeight: isSelected ? "70vh" : 200,
         border: "none",
         cursor: "pointer",
         position: "relative",

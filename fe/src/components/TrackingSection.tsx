@@ -47,11 +47,10 @@ const TrackingSection = ({
       sx={{
         display: "flex",
         flexWrap: "wrap",
-        gap: 2,
-        padding: 2,
+        gap: 1,
         justifyContent: "center",
         position: "relative",
-        minHeight: "100vh",
+        minHeight: "76vh",
       }}
     >
       {videos.map((video, index) => (
