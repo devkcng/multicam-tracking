@@ -3,6 +3,7 @@ import SearchBar from "./components/SearchBar";
 import VideoCard from "./components/VideoCard";
 import ObjectItem from "./components/ObjectItem";
 import TrackingSection from "./components/TrackingSection";
+import FloatingChatButton from "./components/FloatingChatButton";
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
           </Box>
         </Box>
       </Box>
+      <FloatingChatButton/>
     </>
   );
 }
