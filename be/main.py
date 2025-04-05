@@ -1,11 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from services.retrieval import *
 from pydantic import BaseModel
 from typing import List
 from fastapi import UploadFile, File
 import os
 from fastapi.middleware.cors import CORSMiddleware
-
+import re
+from fastapi.responses import FileResponse
+from utils.id_utils import *
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 app = FastAPI()
@@ -53,38 +55,38 @@ async def upload_video(file: UploadFile = File(...)):
         f.write(await file.read())
     return {"message": f"Video {file.filename} uploaded successfully!"}
 
-def list_videos():
-    processed_path = "static/videos/processed"
-    os.makedirs(processed_path, exist_ok=True)
-    video_list = os.listdir(processed_path)
-    return {"video_list": video_list}
+BASE_VIDEO_DIR = "static/videos/default"
 
-@app.get("/processed-videos/")
-def get_processed_videos():
-    return list_videos()
+@app.get("/camera-ids/")
+def list_camera_ids():
+    if not os.path.exists(BASE_VIDEO_DIR):
+        raise HTTPException(status_code=404, detail="Base directory not found.")
+    
+    camera_folders = [
+        folder for folder in os.listdir(BASE_VIDEO_DIR)
+        if os.path.isdir(os.path.join(BASE_VIDEO_DIR, folder)) and re.match(r"camera_\d{4}", folder)
+    ]
 
-# @app.get("/download-video/{video_name}")
-# def download_video(video_name: str):
-#     processed_path = "static/videos/processed"
-#     file_path = os.path.join(processed_path, video_name)
-#     if os.path.exists(file_path) and video_name.endswith(".mp4"):
-#         return {"download_link": f"/static/videos/processed/{video_name}": 
-#          }
-#     else:
-#         return {"error": "Video not found or invalid file type"}
-@app.get("/get_video_info")
-def get_video_info():
-    # Full input path (from your example)
-    full_path = "/kaggle/input/video-matching/matching_videos (1)/kaggle/working/output_video/camera_0342/annotated_video_h264.mp4"
+    cam_ids = [folder.split("_")[1] for folder in camera_folders]
     
-    # Extract camera ID (0342) from the path
-    cam_id = os.path.basename(os.path.dirname(full_path))  # camera_0342
-    cam_id = cam_id.replace("camera_", "")  # "0342"
-    
-    # Return a path relative to your frontend (you can map this with nginx/static route etc.)
-    relative_path = f"/video/camera_{cam_id}/annotated_video_h264.mp4"
-    
-    return JSONResponse(content={
-        "cam_id": cam_id,
-        "path": relative_path
-    })
+    # Sort numerically
+    sorted_cam_ids = sorted(cam_ids, key=lambda x: int(x))
+
+    return {"camera_ids": sorted_cam_ids}
+
+
+@app.get("/video/{cam_id}")
+def get_video_by_cam_id(cam_id: str):
+    folder_name = f"camera_{cam_id}"
+    video_path = os.path.join(BASE_VIDEO_DIR, folder_name, "annotated_video_h264.mp4")
+
+    if not os.path.isfile(video_path):
+        raise HTTPException(status_code=404, detail="Video file not found for this camera ID.")
+
+    return FileResponse(video_path, media_type="video/mp4", filename=f"{cam_id}.mp4")
+
+@app.get("/cam_ids", response_model=List[int])
+async def get_cam_ids():
+    file_path = '/kaggle/input/binomic/global_detection.txt'  # Path to your file
+    cam_id_list = get_unique_cam_ids(file_path)
+    return cam_id_list
