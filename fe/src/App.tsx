@@ -1,18 +1,16 @@
 import { Box, Typography } from "@mui/joy";
-import SearchBar from "./components/SearchBar";
-import VideoCard from "./components/VideoCard";
-import ObjectItem from "./components/ObjectItem";
-import TrackingSection from "./components/TrackingSection";
-import FloatingChatButton from "./components/FloatingChatButton";
 import { useEffect } from "react";
-import axios from "axios";
+import FloatingChatButton from "./components/FloatingChatButton";
+import ObjectItem from "./components/ObjectItem";
+import SearchBar from "./components/SearchBar";
+import TrackingSection from "./components/TrackingSection";
 import apiClient from "./config";
 
 function App() {
   useEffect(() => {
     const callAPI = async () => {
       try {
-        const response = await apiClient.get("/"); // Chỉ cần "/" vì baseURL đã được định nghĩa
+        const response = await apiClient.get("/");
         console.log("API data:", response.data.message);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -35,7 +33,7 @@ function App() {
         <Typography level="h1" sx={{ textAlign: "center" }}>
           Tracking Assistant
         </Typography>
-
+        {/* Main section */}
         <Box
           sx={{
             display: "flex",
@@ -59,6 +57,7 @@ function App() {
             }}
           >
             <SearchBar onSearch={() => {}} initialValue=""></SearchBar>
+
             <TrackingSection></TrackingSection>
           </Box>
           {/* Filter section */}
