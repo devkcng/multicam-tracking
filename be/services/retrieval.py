@@ -50,9 +50,45 @@ class Retrieval:
         with open(file_json, "r") as file:
             data = json.load(file)
         return data
-    def search(self, text):
+    def search(self, text, k=50, fps=30):
         text = self.translate(text)
         text_features = self.model_nomic.encode(text).reshape(1, -1)
-        self.rerank_index 
-        
-        return
+        scores, idx_image = self.rerank_index.search(text_features, k=k)
+
+        camera_start_id = 342
+        camera_end_id = 350
+        frame_step = 10
+        max_frame = 9000
+        num_frames_per_camera = (max_frame // frame_step) + 1  # 901
+
+        seen_cameras = set()
+        results = []
+
+        for idx in idx_image[0]:  # idx_image shape: (1, k)
+            cam_offset = idx // num_frames_per_camera
+            frame_offset = idx % num_frames_per_camera
+
+            cam_id = camera_start_id + cam_offset
+
+            if cam_id < camera_start_id or cam_id > camera_end_id:
+                continue  # skip unknown camera
+
+            if cam_id in seen_cameras:
+                continue  # skip duplicate camera results
+
+            frame_num = frame_offset * frame_step
+            timestamp_sec = frame_num / fps
+
+            results.append({
+                "camera_id": f"{cam_id:04d}",
+                "frame": frame_num,
+                "time_sec": round(timestamp_sec, 2),
+            })
+
+            seen_cameras.add(cam_id)
+
+            if len(seen_cameras) == (camera_end_id - camera_start_id + 1):
+                break  # already got 1 result for each camera
+
+        return results
+
