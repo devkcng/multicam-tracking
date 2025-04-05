@@ -7,6 +7,7 @@ export type VideoCardProps = {
   title: string;
   isSelected?: boolean;
   onClick?: () => void;
+  onClose?: () => void; // Thêm prop để xử lý thu nhỏ
 };
 
 const VideoCard = ({
@@ -14,6 +15,7 @@ const VideoCard = ({
   title,
   isSelected = false,
   onClick,
+  onClose,
 }: VideoCardProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTime, setCurrentTime] = useState(0);
@@ -52,14 +54,19 @@ const VideoCard = ({
   };
 
   const handleCloseClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Ngăn click lan lên Card
+    if (onClose) onClose(); // Gọi onClose để thu nhỏ
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onClick) onClick();
+    if (!isSelected && onClick) onClick(); // Chỉ phóng to khi chưa được chọn
   };
 
   return (
     <Card
       component="li"
-      onClick={onClick}
+      onClick={handleCardClick} // Chỉ xử lý phóng to
       sx={{
         minWidth: isSelected ? "80vw" : 300,
         minHeight: isSelected ? "75vh" : 200,
@@ -68,8 +75,8 @@ const VideoCard = ({
         position: "relative",
         background: "transparent",
         transition:
-          "min-width 0.5s ease-in-out, min-height 0.5s ease-in-out, transform 0.3s ease-in-out", // Tinh chỉnh transition
-        transform: isSelected ? "scale(1)" : "scale(1)", // Giữ transform để hover hoạt động
+          "min-width 0.5s ease-in-out, min-height 0.5s ease-in-out, transform 0.3s ease-in-out",
+        transform: isSelected ? "scale(1)" : "scale(1)",
       }}
     >
       <CardCover>
@@ -79,7 +86,7 @@ const VideoCard = ({
             width: "100%",
             height: "100%",
             objectFit: "contain",
-            transition: "all 0.5s ease-in-out", // Thêm transition cho video để mượt mà hơn
+            transition: "all 0.5s ease-in-out",
           }}
           autoPlay
           loop
@@ -106,7 +113,7 @@ const VideoCard = ({
           fontWeight: "lg",
           fontSize: "xs",
           zIndex: 1,
-          transition: "all 0.5s ease-in-out", // Thêm transition cho title
+          transition: "all 0.5s ease-in-out",
         }}
       >
         {title || "cam1"}
@@ -128,8 +135,8 @@ const VideoCard = ({
           borderRadius: "8px",
           padding: 1,
           zIndex: 1,
-          transition: "all 0.5s ease-in-out", // Thêm transition cho slider box
-          opacity: isSelected ? 1 : 0.8, // Hiệu ứng opacity nhẹ khi thu nhỏ
+          transition: "all 0.5s ease-in-out",
+          opacity: isSelected ? 1 : 0.8,
         }}
       >
         <Slider
@@ -171,7 +178,7 @@ const VideoCard = ({
             "&:hover": {
               background: "rgba(231, 21, 21, 0.7)",
             },
-            transition: "opacity 0.3s ease-in-out", // Thêm transition cho nút Close
+            transition: "opacity 0.3s ease-in-out",
             opacity: 1,
           }}
         >

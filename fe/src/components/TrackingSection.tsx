@@ -35,7 +35,11 @@ const TrackingSection = ({
   );
 
   const handleVideoClick = (index: number) => {
-    setSelectedVideoIndex(selectedVideoIndex === index ? null : index); // Toggle chọn/hủy chọn
+    setSelectedVideoIndex(index); // Chỉ phóng to, không toggle
+  };
+
+  const handleVideoClose = () => {
+    setSelectedVideoIndex(null); // Thu nhỏ lại
   };
 
   return (
@@ -47,7 +51,7 @@ const TrackingSection = ({
         padding: 2,
         justifyContent: "center",
         position: "relative",
-        minHeight: "100vh", // Đảm bảo đủ không gian khi phóng to
+        minHeight: "100vh",
       }}
     >
       {videos.map((video, index) => (
@@ -57,14 +61,15 @@ const TrackingSection = ({
             display:
               selectedVideoIndex === null || selectedVideoIndex === index
                 ? "block"
-                : "none", // Ẩn các video không được chọn
+                : "none",
           }}
         >
           <VideoCard
             title={video.title}
             videoSrc={video.videoSrc}
-            isSelected={selectedVideoIndex === index} // Truyền trạng thái được chọn
-            onClick={() => handleVideoClick(index)} // Xử lý click
+            isSelected={selectedVideoIndex === index}
+            onClick={() => handleVideoClick(index)} // Xử lý phóng to
+            onClose={handleVideoClose} // Xử lý thu nhỏ
           />
         </Box>
       ))}
