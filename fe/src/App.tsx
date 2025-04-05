@@ -26,7 +26,7 @@ function App() {
             display: "flex",
             flexDirection: "row",
             gap: 2,
-            alignItems: "start",
+            alignItems: "center",
           }}
         >
           {/* Video section */}
@@ -49,7 +49,7 @@ function App() {
           {/* Filter section */}
           <Box
             sx={{
-              width: "10vw",
+              width: "auto",
               height: "auto",
               padding: 2,
             }}
