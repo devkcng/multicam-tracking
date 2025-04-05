@@ -4,8 +4,22 @@ import VideoCard from "./components/VideoCard";
 import ObjectItem from "./components/ObjectItem";
 import TrackingSection from "./components/TrackingSection";
 import FloatingChatButton from "./components/FloatingChatButton";
+import { useEffect } from "react";
+import axios from "axios";
+import apiClient from "./config";
 
 function App() {
+  useEffect(() => {
+    const callAPI = async () => {
+      try {
+        const response = await apiClient.get("/"); // Chỉ cần "/" vì baseURL đã được định nghĩa
+        console.log("API data:", response.data.message);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    callAPI();
+  }, []);
   return (
     <>
       <Box
@@ -59,7 +73,7 @@ function App() {
           </Box>
         </Box>
       </Box>
-      <FloatingChatButton/>
+      <FloatingChatButton />
     </>
   );
 }
