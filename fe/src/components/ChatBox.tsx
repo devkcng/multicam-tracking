@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Box, Input, Button } from "@mui/joy";
+import { Box, Input, Button, CircularProgress } from "@mui/joy";
 import Message from "./MessageCard";
 
 
@@ -16,14 +16,14 @@ const ChatBox = () => {
     sender: "assistant"
   }]);
   const [inputValue, setInputValue] = useState("");
+  const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (inputValue.trim() === "") return;
 
     const newMessage: MessageType = {
@@ -34,10 +34,40 @@ const ChatBox = () => {
 
     setMessages((prev) => [...prev, newMessage]);
     setInputValue("");
+    setLoading(true);
 
-    // gui reqest
-    // bat
-    // set
+    try {
+      const response = await fetch("https://above-ruling-ringtail.ngrok-free.app/", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+  
+      const data = await response.json();
+  
+      const assistantMessage: MessageType = {
+        id: Date.now() + 1,
+        text: data.message || "No response from server",
+        sender: "assistant",
+      };
+      
+      // Add new message from server
+      setMessages((prev) => [...prev, assistantMessage]);
+  
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 2,
+          text: "Internal server error!",
+          sender: "assistant",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -81,12 +111,19 @@ const ChatBox = () => {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") handleSend();
+            if (!loading && e.key === "Enter") handleSend();
           }}
           fullWidth
         />
-        <Button onClick={handleSend}>Send</Button>
+        <Button onClick={handleSend} disabled={loading}>Send</Button>
       </Box>
+
+      {loading && (
+        <Box sx={{ display: "flex", justifyContent: "center", padding: 2 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
     </Box>
   );
 };
