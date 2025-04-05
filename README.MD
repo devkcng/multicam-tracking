@@ -7,7 +7,7 @@ Follow these steps to set up and run the FastAPI project:
 1. Navigate to the project directory:
 
     ```bash
-    cd /home/devkcng/big-project/multicam-tracking-be
+    cd multicam-tracking-be
     ```
 
 2. Create a virtual environment:
