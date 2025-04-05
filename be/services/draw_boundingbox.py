@@ -71,7 +71,7 @@ def draw_detections(video_path, detections_df, cam_id, output_video=None, max_fr
 
 def draw_matching(id: int):
     video_urls = []
-    
+    camera_names = []
     # Load the full ground truth file once
     detections_path = "/kaggle/input/binomic/global_detection.txt"
     columns = ['cam_id', 'person_id', 'frame_id', 'x1', 'y1', 'w', 'h', 'vx', 'vy']
@@ -123,5 +123,5 @@ def draw_matching(id: int):
         # Add the URL of the processed video
         video_url = f"/static/matching_id/{camera_name}/annotated_video_h264.mp4"
         video_urls.append(video_url)
-
-    return video_urls
+        camera_names.append(camera_name)
+    return video_urls, camera_names

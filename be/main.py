@@ -12,6 +12,7 @@ from services.chatbot import LlavaNextVideoInference
 from typing import Optional
 from services import matching
 from services.draw_boundingbox import draw_matching
+import pandas as pd
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -168,19 +169,39 @@ def get_video_filter(video_path: str, matching_id: str):
 
     # Return the video file as a FileResponse
     return FileResponse(video_path, media_type="video/mp4", filename=f"{matching_id}.mp4")
-@app.post("/draw-matching/")
-async def create_matching(request: Request):
+@app.get("/draw-matching/")
+async def create_matching(person_id: int):
+
+    if person_id == 0:
+        return {"status": "failed", "message": "ID not found", "video_urls": []}
 
     try:
         # Call the draw_matching function with the person_id
-        video_urls = draw_matching(request.person_id)
+        video_urls, camera_names = draw_matching(person_id)
 
         # Use request.url_for to dynamically generate URLs for the videos
         for i in range(len(video_urls)):
             # Assuming you need to generate the URL for each video
             video_urls[i] = request.url_for("get_video_filter", video_path=video_urls[i], matching_id=f"video_{i}")
 
-        return {"status": "success", "message": "Matching process completed", "video_urls": video_urls}
+        return {"status": "success", "message": "Matching process completed", "video_urls": video_urls, "cam_ids": camera_names}
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+@app.get("/all_person_ids")
+async def get_person_ids():
+    try:
+        # Load the data into a pandas DataFrame, using space as delimiter
+        data = pd.read_csv('/kaggle/input/binomic/global_detection.txt', sep=r'\s+', header=0)
+        
+        # Rename columns for easier access
+        data.columns = ['cam_id', 'person_id', 'frame_idx', 'x1', 'h1', 'w', 'h', 'vx', 'vy']
+        
+        # Extract unique person_id values
+        person_ids = data['person_id'].unique().tolist()
+
+        # Return the list of unique person_ids
+        return {"person_ids": person_ids}
+    
+    except Exception as e:
+        return {"error": str(e)}
