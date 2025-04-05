@@ -2,6 +2,7 @@ import { Box, Typography } from "@mui/joy";
 import SearchBar from "./components/SearchBar";
 import VideoCard from "./components/VideoCard";
 import ObjectItem from "./components/ObjectItem";
+import TrackingSection from "./components/TrackingSection";
 
 function App() {
   return (
@@ -25,7 +26,7 @@ function App() {
             display: "flex",
             flexDirection: "row",
             gap: 2,
-            alignItems: "start",
+            alignItems: "center",
           }}
         >
           {/* Video section */}
@@ -43,26 +44,12 @@ function App() {
             }}
           >
             <SearchBar onSearch={() => {}} initialValue=""></SearchBar>
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 2,
-                padding: 2,
-                justifyContent: "center",
-              }}
-            >
-              <VideoCard></VideoCard>
-              <VideoCard></VideoCard>
-              <VideoCard></VideoCard>
-              <VideoCard></VideoCard>
-              <VideoCard></VideoCard>
-            </Box>
+            <TrackingSection></TrackingSection>
           </Box>
           {/* Filter section */}
           <Box
             sx={{
-              width: "10vw",
+              width: "auto",
               height: "auto",
               padding: 2,
             }}

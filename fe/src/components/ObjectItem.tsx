@@ -8,7 +8,8 @@ import {
   Button,
 } from "@mui/joy";
 import React, { useState } from "react";
-
+import FilterListAltIcon from "@mui/icons-material/FilterListAlt";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 type ObjectProps = {
   name?: string;
   subItems?: string[];
@@ -16,7 +17,7 @@ type ObjectProps = {
 
 type ListItems = {
   items: ObjectProps[];
-  isVisible?: boolean; // Prop để điều khiển ẩn/hiện từ bên ngoài (tùy chọn)
+  isVisible?: boolean;
 };
 
 const ObjectItem = ({
@@ -38,17 +39,13 @@ const ObjectItem = ({
       subItems: ["cam1", "cam2", "cam3"],
     },
   ],
-  isVisible: initialVisible = true, // Mặc định là hiện
+  isVisible: initialVisible = true,
 }: ListItems) => {
-  // State để theo dõi trạng thái của các checkbox
   const [checkedItems, setCheckedItems] = useState<{
     [key: string]: boolean;
   }>({});
-
-  // State để điều khiển ẩn/hiện AccordionGroup
   const [visible, setVisible] = useState(initialVisible);
 
-  // Hàm xử lý khi checkbox thay đổi
   const handleCheckboxChange = (itemName: string, subItem: string) => {
     const key = `${itemName}-${subItem}`;
     setCheckedItems((prev) => ({
@@ -57,19 +54,51 @@ const ObjectItem = ({
     }));
   };
 
-  // Hàm toggle ẩn/hiện
   const toggleVisibility = () => {
     setVisible((prev) => !prev);
   };
 
   return (
-    <>
-      {/* Nút để toggle ẩn/hiện */}
-      <Box sx={{ display: "flex", justifyContent: "center", mb: 1 }}>
-        <Button onClick={toggleVisibility}>
-          {visible ? "Hide Accordion" : "Show Accordion"}
-        </Button>
-      </Box>
+    <Box
+      sx={{
+        position: "relative",
+        alignItems: "center",
+        display: "flex",
+        flexDirection: "column",
+        gap: 1,
+      }}
+    >
+      {/* Nút toggle với style động */}
+      <Button
+        onClick={toggleVisibility}
+        sx={{
+          position: "absolute",
+          right: visible ? "auto" : "-15px",
+          top: visible ? "0" : "50%",
+          transform: visible ? "none" : "translateY(-50%)",
+          transition: "all 0.3s ease",
+          minWidth: visible ? "auto" : "40px",
+          width: visible ? "auto" : "40px",
+          height: visible ? "auto" : "40px",
+          borderRadius: visible ? "4px" : "50%",
+          padding: visible ? "6px 16px" : "0",
+          zIndex: 1,
+          ...(visible
+            ? { margin: "0 auto", display: "block" }
+            : {
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }),
+        }}
+      >
+        {visible ? (
+          <VisibilityOffIcon></VisibilityOffIcon>
+        ) : (
+          <FilterListAltIcon></FilterListAltIcon>
+        )}
+      </Button>
+
       {visible && (
         <Box
           sx={{
@@ -77,10 +106,9 @@ const ObjectItem = ({
             alignItems: "center",
             gap: 1,
             flexDirection: "column",
+            paddingTop: "40px", // Để tránh đè lên button khi visible
           }}
         >
-          {/* AccordionGroup chỉ hiển thị khi visible là true */}
-
           <AccordionGroup
             sx={{
               maxWidth: 400,
@@ -91,7 +119,6 @@ const ObjectItem = ({
               gap: 1,
               padding: 2,
               overflowY: "auto",
-              position: "relative",
             }}
           >
             {items.map((item, index) => (
@@ -125,7 +152,7 @@ const ObjectItem = ({
           <Button>Save</Button>
         </Box>
       )}
-    </>
+    </Box>
   );
 };
 
