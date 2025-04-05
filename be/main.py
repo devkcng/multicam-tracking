@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import re
 from fastapi.responses import FileResponse
 from utils.id_utils import *
+from services.chatbot import LlavaNextVideoInference 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 app = FastAPI()
@@ -33,6 +34,13 @@ class SearchResult(BaseModel):
     camera_id: str
     frame: int
     time_seconds: float
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    chat_history: List[dict]
+
+inference = None
 
 faiss_engine = Retrieval(device)
 
@@ -90,3 +98,28 @@ async def get_cam_ids():
     file_path = '/kaggle/input/binomic/global_detection.txt'  # Path to your file
     cam_id_list = get_unique_cam_ids(file_path)
     return cam_id_list
+@app.post("/start_chat")
+async def start_chat():
+    global inference
+    try:
+        inference = LlavaNextVideoInference(video_paths=['input/video-matching/matching_videos (1)/kaggle/working/output_video/camera_0342/annotated_video_h264.mp4',
+                                                         'input/video-matching/matching_videos (1)/kaggle/working/output_video/camera_0343/annotated_video_h264.mp4',
+                                                         'input/video-matching/matching_videos (1)/kaggle/working/output_video/camera_0344/annotated_video_h264.mp4',
+                                                         'input/video-matching/matching_videos (1)/kaggle/working/output_video/camera_0345/annotated_video_h264.mp4',])
+        response = inference.infer(request.question)
+        return ChatResponse(answer=response, chat_history=inference.get_chat_history())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Endpoint for continued conversation
+@app.post("/chat")
+async def chat(request: ChatRequest):
+    if not inference:
+        raise HTTPException(status_code=400, detail="Please start a conversation first using /start_chat")
+
+    try:
+        # Use the question from the user and pass the chat history from the inference object
+        response = inference.infer(request.question)
+        return ChatResponse(answer=response, chat_history=inference.get_chat_history())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

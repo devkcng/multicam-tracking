@@ -9,3 +9,5 @@ easydict
 ultralytics
 fastapi
 uvicorn
+av
+python-multipart

@@ -1,22 +1,47 @@
 import av
 import torch
 import numpy as np
+from concurrent.futures import ThreadPoolExecutor
+from huggingface_hub import hf_hub_download
 from transformers import LlavaNextVideoProcessor, LlavaNextVideoForConditionalGeneration
+from torch.nn import DataParallel
 
-class VideoChatbot:
-    def __init__(self, model_id="llava-hf/LLaVA-NeXT-Video-7B-hf", device="cuda"):
-        self.device = device if torch.cuda.is_available() else "cpu"
+class LlavaNextVideoInference:
+    def __init__(self, model_id="llava-hf/LLaVA-NeXT-Video-7B-hf", dtype=torch.float16, video_paths=None, num_frames=8):
+        self.model_id = model_id
+        self.dtype = dtype
+        self.video_paths = video_paths or []
+        self.num_frames = num_frames
 
+        # Load model and wrap with DataParallel to use multiple GPUs
         self.model = LlavaNextVideoForConditionalGeneration.from_pretrained(
-            model_id, 
-            torch_dtype=torch.float16, 
+            self.model_id,
+            torch_dtype=self.dtype,
             low_cpu_mem_usage=True
-        ).to(self.device)
+        )
 
-        self.processor = LlavaNextVideoProcessor.from_pretrained(model_id)
-        self.history = []  # Store chat history
+        # Use DataParallel to distribute the model across available GPUs
+        if torch.cuda.device_count() > 1:
+            print(f"Using {torch.cuda.device_count()} GPUs!")
+            self.model = DataParallel(self.model)
+
+        self.processor = LlavaNextVideoProcessor.from_pretrained(self.model_id)
+
+        # Initialize conversation history
+        self.chat_history = []
+
+        # Pre-process the videos before chat starts
+        if self.video_paths:
+            self.video_clips = self.process_multiple_videos(self.video_paths)
+
+    def _decode_and_convert(self, frames):
+        """ Convert frames to ndarray using parallel processing """
+        with ThreadPoolExecutor() as executor:
+            result = list(executor.map(lambda f: f.to_ndarray(format="rgb24"), frames))
+        return np.stack(result)
 
     def _read_video_pyav(self, container, indices):
+        """ Read frames from the video container using the provided indices """
         frames = []
         container.seek(0)
         start_index = indices[0]
@@ -26,57 +51,72 @@ class VideoChatbot:
                 break
             if i >= start_index and i in indices:
                 frames.append(frame)
-        return np.stack([x.to_ndarray(format="rgb24") for x in frames])
+        return self._decode_and_convert(frames)
 
-    def _sample_frame_indices(self, total_frames, num_samples=8):
-        return np.linspace(0, total_frames - 1, num_samples).astype(int)
+    def _prepare_prompt(self):
+        """ Prepare the chat prompt using conversation history """
+        conversation = []
+        for message in self.chat_history:
+            if message["role"] == "user":
+                conversation.append({"type": "text", "text": message["content"]})
+            elif message["role"] == "assistant":
+                conversation.append({"type": "text", "text": message["content"]})
 
-    def chat(self, video_paths, user_message="What is happening in these videos?"):
-        # Ensure we handle multiple video paths
+        # Add the current user message
+        conversation.append({"type": "text", "text": self.chat_history[-1]["content"]})
+
+        # Add the video content
+        conversation.append({"type": "video"})
+
+        # Prepare prompt with the conversation history
+        return self.processor.apply_chat_template([{"role": "user", "content": conversation}], add_generation_prompt=True)
+
+    def process_video(self, video_path):
+        """ Process a single video and return the video clip (extracted frames) """
+        container = av.open(video_path)
+        total_frames = container.streams.video[0].frames
+        indices = np.linspace(0, total_frames - 1, self.num_frames, dtype=int)
+
+        clip = self._read_video_pyav(container, indices)
+        return clip
+
+    def process_multiple_videos(self, video_paths):
+        """ Process multiple videos and return a list of clips """
         video_clips = []
         for video_path in video_paths:
-            container = av.open(video_path)
-            total_frames = container.streams.video[0].frames
-            indices = self._sample_frame_indices(total_frames)
-            clip = self._read_video_pyav(container, indices)
-            video_clips.append(clip)  # Collect video clips
+            clip = self.process_video(video_path)
+            video_clips.append(clip)
+        return video_clips
 
-        # Add new user turn with video
-        user_turn = {
-            "role": "user",
-            "content": [
-                {"type": "text", "text": user_message},
-                {"type": "video"},
-            ],
-        }
-        self.history.append(user_turn)
+    def infer(self, user_question):
+        """ Perform inference on the pre-processed videos and return responses """
+        # Ensure the videos are processed and ready for inference
+        if not hasattr(self, 'video_clips'):
+            raise ValueError("No videos provided for inference.")
 
-        # Count how many {"type": "video"} in the full conversation
-        video_count = sum(
-            1 for message in self.history for item in message["content"] if item["type"] == "video"
-        )
+        # Update chat history with the new user question
+        self.chat_history.append({"role": "user", "content": user_question})
 
-        # Ensure video_inputs matches the number of video tokens
-        video_inputs = video_clips[:video_count]  # Slice to match
+        # Prepare the prompt using the conversation history
+        prompt = self._prepare_prompt()
 
-        # Build prompt
-        prompt = self.processor.apply_chat_template(self.history, add_generation_prompt=True)
-
-        # Tokenize with matched video inputs
+        # Prepare inputs for the model
         inputs = self.processor(
             text=prompt,
-            videos=video_inputs,
+            videos=self.video_clips,
             padding=True,
             return_tensors="pt"
         ).to(self.model.device)
 
+        # Run the model to generate output for each video
         output = self.model.generate(**inputs, max_new_tokens=100, do_sample=False)
-        response_text = self.processor.decode(output[0][2:], skip_special_tokens=True)
+        answer = self.processor.decode(output[0][2:], skip_special_tokens=True)
 
-        # Add assistant's response to history
-        self.history.append({
-            "role": "assistant",
-            "content": [{"type": "text", "text": response_text}]
-        })
+        # Save model's response to history
+        self.chat_history.append({"role": "assistant", "content": answer})
 
-        return response_text
+        return answer
+
+    def get_chat_history(self):
+        """ Return the conversation history """
+        return self.chat_history
