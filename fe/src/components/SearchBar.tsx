@@ -2,6 +2,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, IconButton, Input } from "@mui/joy";
 import React, { useState } from "react";
+import VideoUploader from "./VideoUpLoader";
 interface SearchBarProps {
   onSearch: (searchTerm: string) => void;
   placeholder?: string;
@@ -35,6 +36,8 @@ const SearchBar = ({
         width: "50vw",
       }}
     >
+      {/* Upload button */}
+      <VideoUploader></VideoUploader>
       <Input
         startDecorator={<SearchIcon />}
         endDecorator={
@@ -66,6 +69,8 @@ const SearchBar = ({
       >
         <SearchIcon />
       </IconButton>
+
+      {/* Video Section */}
     </Box>
   );
 };
