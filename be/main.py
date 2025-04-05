@@ -43,7 +43,6 @@ class SearchResult(BaseModel):
     video_url: Optional[str] = None
 
 class ChatRequest(BaseModel):
-    video_paths: List[str]
     question: str
     
 class ChatResponse(BaseModel):
@@ -138,7 +137,7 @@ async def get_cam_ids(person_id: int = Query(..., description="The person ID to 
     cam_id_list = get_cam_ids_for_person(file_path, person_id)
     return cam_id_list
 @app.post("/start_chat")
-async def start_chat():
+async def start_chat(request: ChatRequest):
     global inference, BASE_VIDEO_DIR
     try:
         inference = LlavaNextVideoInference(video_paths=[f'{BASE_VIDEO_DIR}/camera_0342/annotated_video_h264.mp4'])
@@ -188,20 +187,20 @@ async def create_matching(person_id: int):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
 @app.get("/all_person_ids")
 async def get_person_ids():
     try:
-        # Load the data into a pandas DataFrame, using space as delimiter
-        data = pd.read_csv('/kaggle/input/binomic/global_detection.txt', sep=r'\s+', header=0)
-        
-        # Rename columns for easier access
-        data.columns = ['cam_id', 'person_id', 'frame_idx', 'x1', 'h1', 'w', 'h', 'vx', 'vy']
-        
-        # Extract unique person_id values
-        person_ids = data['person_id'].unique().tolist()
+        file_path = "/kaggle/input/binomic/global_detection.txt"
 
-        # Return the list of unique person_ids
-        return {"person_ids": person_ids}
+        # Open the file and read it
+        with open(file_path, "r") as file:
+            lines = file.readlines()
+
+        person_ids = set(line.split()[1] for line in lines[1:])  # Skip the header line
+
+        # Print the sorted unique person_ids
+        return {"all_ids": (sorted(person_ids))}
     
     except Exception as e:
         return {"error": str(e)}
