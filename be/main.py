@@ -14,6 +14,7 @@ from services import matching
 from services.draw_boundingbox import draw_matching
 import pandas as pd
 
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 app = FastAPI()
