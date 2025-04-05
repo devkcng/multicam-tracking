@@ -1,4 +1,4 @@
-from utils.processing_text import Translation 
+# from utils.processing_text import Translation 
 from sentence_transformers import SentenceTransformer
 import faiss
 import json
@@ -16,8 +16,8 @@ class Retrieval:
     def __init__(self, device, rerank_bin_file: str = None):
             # Ensure that bin_files and modes lists have the same length
             # Initialize re-ranking index if provided
-            self.rerank_index = self.load_bin_file("/kaggle/input/binomic/binnomic/kaggle/working/faiss_nomic_cosine.bin") 
-            self.translate = Translation()
+            self.rerank_index = self.load_bin_file("/kaggle/input/binomic/faiss_nomic_cosine.bin") 
+            # self.translate = Translation()
             
             self.device = device
             # Initialize SentenceTransformer model
@@ -48,7 +48,7 @@ class Retrieval:
             data = json.load(file)
         return data
     def search(self, text, k=50, fps=30):
-        text = self.translate(text)
+        # text = self.translate(text)
         text_features = self.model_nomic.encode(text).reshape(1, -1)
         scores, idx_image = self.rerank_index.search(text_features, k=k)
 

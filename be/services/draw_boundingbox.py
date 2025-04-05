@@ -100,3 +100,7 @@ def draw_matching(id: int):
         ]
         
         subprocess.run(command)
+        video_url = f"/static/matching_id/{camera_name}/annotated_video_h264.mp4"
+        video_urls.append(video_url)
+
+    return video_urls
