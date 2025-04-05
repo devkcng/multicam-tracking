@@ -1,6 +1,7 @@
 import { Box, Typography } from "@mui/joy";
 import SearchBar from "./components/SearchBar";
 import VideoCard from "./components/VideoCard";
+import ObjectItem from "./components/ObjectItem";
 
 function App() {
   return (
@@ -18,34 +19,55 @@ function App() {
         <Typography level="h1" sx={{ textAlign: "center" }}>
           Tracking Assistant
         </Typography>
+
         <Box
           sx={{
-            width: "80vw",
-            height: "auto",
-            border: "1px solid black",
-            borderRadius: "lg",
             display: "flex",
-            flexDirection: "column",
+            flexDirection: "row",
             gap: 2,
-            padding: 1,
-            alignItems: "center",
+            alignItems: "start",
           }}
         >
-          <SearchBar onSearch={() => {}} initialValue=""></SearchBar>
+          {/* Video section */}
           <Box
             sx={{
+              width: "80vw",
+              height: "auto",
+              border: "1px solid black",
+              borderRadius: "lg",
               display: "flex",
-              flexWrap: "wrap",
+              flexDirection: "column",
               gap: 2,
-              padding: 2,
-              justifyContent: "center",
+              padding: 1,
+              alignItems: "center",
             }}
           >
-            <VideoCard></VideoCard>
-            <VideoCard></VideoCard>
-            <VideoCard></VideoCard>
-            <VideoCard></VideoCard>
-            <VideoCard></VideoCard>
+            <SearchBar onSearch={() => {}} initialValue=""></SearchBar>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 2,
+                padding: 2,
+                justifyContent: "center",
+              }}
+            >
+              <VideoCard></VideoCard>
+              <VideoCard></VideoCard>
+              <VideoCard></VideoCard>
+              <VideoCard></VideoCard>
+              <VideoCard></VideoCard>
+            </Box>
+          </Box>
+          {/* Filter section */}
+          <Box
+            sx={{
+              width: "10vw",
+              height: "auto",
+              padding: 2,
+            }}
+          >
+            <ObjectItem></ObjectItem>
           </Box>
         </Box>
       </Box>

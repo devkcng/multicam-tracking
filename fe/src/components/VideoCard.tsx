@@ -18,7 +18,7 @@ const VideoCard = ({ videoSrc, title }: VideoCardProps) => {
             loop
             muted
           >
-            <source src="/video/demo2.mp4" type="video/mp4" />
+            <source src={videoSrc || "/video/demo2.mp4"} type="video/mp4" />
           </video>
         </CardCover>
         <CardContent
@@ -42,7 +42,7 @@ const VideoCard = ({ videoSrc, title }: VideoCardProps) => {
               mt: { xs: 12, sm: 18 },
             }}
           >
-            Video
+            {title || "cam1"}
           </Typography>
         </CardContent>
       </Card>
