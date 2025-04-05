@@ -11,7 +11,7 @@ from utils.id_utils import get_cam_ids_for_person
 from services.chatbot import LlavaNextVideoInference 
 from typing import Optional
 from services import matching
-
+from services.draw_boundingbox import draw_matching
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -64,22 +64,23 @@ def search(request: SearchRequest, req: Request):
 
     for item in result:
         cam_id = int(item["camera_id"])
+        cam_id = f"{cam_id:04d}"
         timestamp_sec = item["time_sec"]
-
         # Build video path
         video_path = os.path.join(BASE_VIDEO_DIR, f"camera_{cam_id}", "annotated_video_h264.mp4")
-
-        # Default to None if video not found
         video_url = None
+        print(f"Checking if the file exists: {video_path}")
         if os.path.isfile(video_path):
-            video_url = req.url_for("get_video_by_cam_id", cam_id=cam_id)
-
+            print(f"File found: {video_path}")
+            video_url = str(req.url_for("get_video_by_cam_id", cam_id=cam_id))
+        else:
+            print(f"File not found: {video_path}")
+        print(video_url)
         results_with_video.append({
-            "camera_id": f"{cam_id:04d}",
+            "camera_id": cam_id,
             "time_sec": round(timestamp_sec, 2),
             "video_url": video_url,
         })
-
     return results_with_video
 
 @app.post("/upload-video")
@@ -158,11 +159,28 @@ async def chat(request: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+filter_URL = '/kaggle/working/multicam-tracking/be/static/matching_id'
+os.makedirs
+def get_video_filter(video_path: str, matching_id: str):
+    # Check if the video file exists
+    if not os.path.isfile(video_path):
+        raise HTTPException(status_code=404, detail="Video file not found for this camera ID.")
+
+    # Return the video file as a FileResponse
+    return FileResponse(video_path, media_type="video/mp4", filename=f"{matching_id}.mp4")
 @app.post("/draw-matching/")
-async def create_matching(request: MatchingRequest):
+async def create_matching(request: Request):
+
     try:
         # Call the draw_matching function with the person_id
         video_urls = draw_matching(request.person_id)
+
+        # Use request.url_for to dynamically generate URLs for the videos
+        for i in range(len(video_urls)):
+            # Assuming you need to generate the URL for each video
+            video_urls[i] = request.url_for("get_video_filter", video_path=video_urls[i], matching_id=f"video_{i}")
+
         return {"status": "success", "message": "Matching process completed", "video_urls": video_urls}
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")

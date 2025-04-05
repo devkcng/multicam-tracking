@@ -67,9 +67,13 @@ def draw_detections(video_path, detections_df, cam_id, output_video=None, max_fr
         writer.release()
     print(f"✅ Completed: {output_video or 'No output'} for Camera {cam_id}")
 
+
+
 def draw_matching(id: int):
+    video_urls = []
+    
     # Load the full ground truth file once
-    detections_path = "/kaggle/input/dataset-acc2024/scene_039/ground_truth.txt"
+    detections_path = "/kaggle/input/binomic/global_detection.txt"
     columns = ['cam_id', 'person_id', 'frame_id', 'x1', 'y1', 'w', 'h', 'vx', 'vy']
     df = pd.read_csv(detections_path, delim_whitespace=True, header=None, names=columns)
 
@@ -82,12 +86,23 @@ def draw_matching(id: int):
         video_path = f"/kaggle/input/dataset-acc2024/scene_039/{camera_name}/video.mp4"
         output_video = f"/kaggle/working/multicam-tracking/be/static/matching_id/{camera_name}/annotated_video.mp4"
 
+        # Ensure the output directory exists
+        output_dir = os.path.dirname(output_video)
+        os.makedirs(output_dir, exist_ok=True)
+        print(f"Output directory: {output_dir}")
+
         # Call draw_detections with the specified person_id
         draw_detections(video_path, df, cam_id, output_video, person_id=id)
 
+        # Check if the video file was created
+        if os.path.exists(output_video):
+            print(f"✅ Successfully created {output_video}")
+        else:
+            print(f"⚠️ Failed to create {output_video}")
+
         # Convert to H.264 format using ffmpeg
-        input_video = f"/kaggle/working/multicam-tracking/be/static/matching_id/{camera_name}/annotated_video.mp4"
-        output_video = f"/kaggle/working/multicam-tracking/be/static/matching_id/{camera_name}/annotated_video_h264.mp4"
+        input_video = output_video
+        output_video_h264 = f"/kaggle/working/multicam-tracking/be/static/matching_id/{camera_name}/annotated_video_h264.mp4"
         
         command = [
             'ffmpeg', '-i', input_video, 
@@ -96,10 +111,16 @@ def draw_matching(id: int):
             '-profile:v', 'baseline', 
             '-level', '3.0', 
             '-movflags', '+faststart', 
-            output_video
+            output_video_h264
         ]
         
-        subprocess.run(command)
+        try:
+            subprocess.run(command, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error during video conversion for camera {camera_name}: {e}")
+            continue
+
+        # Add the URL of the processed video
         video_url = f"/static/matching_id/{camera_name}/annotated_video_h264.mp4"
         video_urls.append(video_url)
 
