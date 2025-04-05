@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query, Request
 from services.retrieval import *
 from pydantic import BaseModel
 from typing import List
@@ -7,7 +7,7 @@ import os
 from fastapi.middleware.cors import CORSMiddleware
 import re
 from fastapi.responses import FileResponse
-from utils.id_utils import *
+from utils.id_utils import get_cam_ids_for_person
 from services.chatbot import LlavaNextVideoInference 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -35,7 +35,10 @@ class SearchResult(BaseModel):
     frame: int
     time_seconds: float
 
-
+class ChatRequest(BaseModel):
+    video_paths: List[str]
+    question: str
+    
 class ChatResponse(BaseModel):
     answer: str
     chat_history: List[dict]
@@ -54,19 +57,24 @@ def search(request: SearchRequest):
     return result
 
 
-@app.post("/upload-video/")
-async def upload_video(file: UploadFile = File(...)):
+@app.post("/upload-video")
+async def upload_videos(files: List[UploadFile] = File(...)):
     save_path = "static/videos/unprocessed"
     os.makedirs(save_path, exist_ok=True)
-    file_location = os.path.join(save_path, file.filename)
-    with open(file_location, "wb") as f:
-        f.write(await file.read())
-    return {"message": f"Video {file.filename} uploaded successfully!"}
 
-BASE_VIDEO_DIR = "static/videos/default"
+    uploaded_files = []
+    for file in files:
+        file_location = os.path.join(save_path, file.filename)
+        with open(file_location, "wb") as f:
+            f.write(await file.read())
+        uploaded_files.append(file.filename)
 
-@app.get("/camera-ids/")
-def list_camera_ids():
+    return {"message": "Videos uploaded successfully!", "files": uploaded_files}
+
+BASE_VIDEO_DIR = "/kaggle/input/video-matching/matching_videos (1)/kaggle/working/output_video"
+
+@app.get("/camera-ids")
+def list_camera_ids(request: Request):
     if not os.path.exists(BASE_VIDEO_DIR):
         raise HTTPException(status_code=404, detail="Base directory not found.")
     
@@ -76,11 +84,16 @@ def list_camera_ids():
     ]
 
     cam_ids = [folder.split("_")[1] for folder in camera_folders]
-    
-    # Sort numerically
     sorted_cam_ids = sorted(cam_ids, key=lambda x: int(x))
 
-    return {"camera_ids": sorted_cam_ids}
+    videos_info = []
+    for cam_id in sorted_cam_ids:
+        video_path = os.path.join(BASE_VIDEO_DIR, f"camera_{cam_id}", "annotated_video_h264.mp4")
+        if os.path.isfile(video_path):
+            video_url = request.url_for("get_video_by_cam_id", cam_id=cam_id)
+            videos_info.append({"cam_id": cam_id, "url": video_url})
+
+    return {"videos": videos_info}
 
 
 @app.get("/video/{cam_id}")
@@ -94,9 +107,9 @@ def get_video_by_cam_id(cam_id: str):
     return FileResponse(video_path, media_type="video/mp4", filename=f"{cam_id}.mp4")
 
 @app.get("/cam_ids", response_model=List[int])
-async def get_cam_ids():
+async def get_cam_ids(person_id: int = Query(..., description="The person ID to search for")):
     file_path = '/kaggle/input/binomic/global_detection.txt'  # Path to your file
-    cam_id_list = get_unique_cam_ids(file_path)
+    cam_id_list = get_cam_ids_for_person(file_path, person_id)
     return cam_id_list
 @app.post("/start_chat")
 async def start_chat():
