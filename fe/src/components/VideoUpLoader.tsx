@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, ChangeEvent } from "react";
 import {
   Button,

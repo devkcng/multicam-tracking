@@ -6,40 +6,17 @@ type TrackingSectionProps = {
   videos: VideoCardProps[];
 };
 
-const TrackingSection = ({
-  videos = [
-    {
-      videoSrc: "/video/demo2.mp4",
-      title: "cam1",
-    },
-    {
-      videoSrc: "/video/demo2.mp4",
-      title: "cam2",
-    },
-    {
-      videoSrc: "/video/demo2.mp4",
-      title: "cam3",
-    },
-    {
-      videoSrc: "/video/demo2.mp4",
-      title: "cam4",
-    },
-    {
-      videoSrc: "/video/demo2.mp4",
-      title: "cam5",
-    },
-  ],
-}: TrackingSectionProps) => {
+const TrackingSection = ({ videos }: TrackingSectionProps) => {
   const [selectedVideoIndex, setSelectedVideoIndex] = useState<number | null>(
     null
   );
 
   const handleVideoClick = (index: number) => {
-    setSelectedVideoIndex(index); // Chỉ phóng to, không toggle
+    setSelectedVideoIndex(index);
   };
 
   const handleVideoClose = () => {
-    setSelectedVideoIndex(null); // Thu nhỏ lại
+    setSelectedVideoIndex(null);
   };
 
   return (
@@ -64,11 +41,10 @@ const TrackingSection = ({
           }}
         >
           <VideoCard
-            title={video.title}
-            videoSrc={video.videoSrc}
-            isSelected={selectedVideoIndex === index}
-            onClick={() => handleVideoClick(index)} // Xử lý phóng to
-            onClose={handleVideoClose} // Xử lý thu nhỏ
+            {...video} // Truyền toàn bộ props từ video
+            isSelected={selectedVideoIndex === index} // Ghi đè isSelected
+            onClick={() => handleVideoClick(index)} // Ghi đè onClick
+            onClose={handleVideoClose} // Ghi đè onClose
           />
         </Box>
       ))}
