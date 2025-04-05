@@ -2,6 +2,7 @@ import { Box, Typography } from "@mui/joy";
 import SearchBar from "./components/SearchBar";
 import VideoCard from "./components/VideoCard";
 import ObjectItem from "./components/ObjectItem";
+import FloatingChatButton from "./components/FloatingChatButton";
 
 function App() {
   return (
@@ -71,6 +72,7 @@ function App() {
           </Box>
         </Box>
       </Box>
+      <FloatingChatButton/>
     </>
   );
 }
