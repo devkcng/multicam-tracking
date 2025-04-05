@@ -1,9 +1,9 @@
-import { Button } from "@mui/joy";
+import SearchBar from "./components/SearchBar";
 
 function App() {
   return (
     <>
-      <Button>Xin chào cả nhà yêu của kem</Button>
+      <SearchBar onSearch={() => {}} initialValue="Input text"></SearchBar>
     </>
   );
 }
