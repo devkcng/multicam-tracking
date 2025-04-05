@@ -81,7 +81,6 @@ class Retrieval:
 
             results.append({
                 "camera_id": f"{cam_id:04d}",
-                "frame": frame_num,
                 "time_sec": round(timestamp_sec, 2),
             })
 
