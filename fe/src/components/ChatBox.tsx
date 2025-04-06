@@ -10,11 +10,7 @@ type MessageType = {
 };
 
 const ChatBox = () => {
-  const [messages, setMessages] = useState<MessageType[]>([{
-    id: 1, 
-    text: "Hi! How can I help you?", 
-    sender: "assistant"
-  }]);
+  const [messages, setMessages] = useState<MessageType[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -22,6 +18,53 @@ const ChatBox = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Run start chat when load component
+  useEffect(() => {
+    startChat();
+  }, []);
+
+  const startChat = async () => {
+    return;
+    try {
+      const response = await fetch("https://engaged-hagfish-usefully.ngrok-free.app/start_chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({
+          question: "Hi!"
+        }),
+      });
+      setLoading(true);
+
+      if (response.status === 200) {
+        const data = await response.json();
+
+        const assistantMessage: MessageType = {
+          id: Date.now() + 1,
+          text: data.answer || "No response from server",
+          sender: "assistant",
+        };
+
+        setMessages((prev) => [
+          ...prev, assistantMessage]);
+      }
+
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 2,
+          text: "Internal server error!",
+          sender: "assistant",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleSend = async () => {
     if (inputValue.trim() === "") return;
@@ -37,25 +80,28 @@ const ChatBox = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("https://above-ruling-ringtail.ngrok-free.app/", {
-        method: "GET",
+      const response = await fetch("https://engaged-hagfish-usefully.ngrok-free.app/chat", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "true",
         },
+        body: JSON.stringify({
+          question: inputValue.trim(),
+        }),
       });
-  
+
       const data = await response.json();
-  
+
       const assistantMessage: MessageType = {
         id: Date.now() + 1,
-        text: data.message || "No response from server",
+        text: data.answer || "No response from server",
         sender: "assistant",
       };
-      
+
       // Add new message from server
       setMessages((prev) => [...prev, assistantMessage]);
-  
+
     } catch (error) {
       setMessages((prev) => [
         ...prev,

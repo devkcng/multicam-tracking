@@ -1,57 +1,41 @@
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionGroup,
-  AccordionSummary,
-  Checkbox,
+  Radio,
   Box,
   Button,
 } from "@mui/joy";
 import React, { useState } from "react";
 import FilterListAltIcon from "@mui/icons-material/FilterListAlt";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-type ObjectProps = {
-  name?: string;
-  subItems?: string[];
+
+export type ObjectProps = {
+  id?: string;
 };
 
 type ListItems = {
   items: ObjectProps[];
   isVisible?: boolean;
+  onClick: (selectedItem: string) => void;
 };
 
 const ObjectItem = ({
   items = [
-    {
-      name: "id:1",
-      subItems: ["cam1", "cam2", "cam3"],
-    },
-    {
-      name: "id:2",
-      subItems: ["cam1", "cam2", "cam3"],
-    },
-    {
-      name: "id:3",
-      subItems: ["cam1", "cam2", "cam3"],
-    },
-    {
-      name: "id:4",
-      subItems: ["cam1", "cam2", "cam3"],
-    },
+    { id: "1" },
+    { id: "2" },
+    { id: "3" },
+    { id: "4" },
   ],
   isVisible: initialVisible = true,
+  onClick
 }: ListItems) => {
-  const [checkedItems, setCheckedItems] = useState<{
-    [key: string]: boolean;
-  }>({});
+  const [selectedItem, setSelectedItem] = useState<string>("");
   const [visible, setVisible] = useState(initialVisible);
 
-  const handleCheckboxChange = (itemName: string, subItem: string) => {
-    const key = `${itemName}-${subItem}`;
-    setCheckedItems((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+  const handleRadioChange = (itemName: string) => {
+    setSelectedItem(itemName);
+  };
+
+  const handleSave = () => {
+    onClick(selectedItem);
   };
 
   const toggleVisibility = () => {
@@ -68,7 +52,6 @@ const ObjectItem = ({
         gap: 1,
       }}
     >
-      {/* Nút toggle với style động */}
       <Button
         onClick={toggleVisibility}
         sx={{
@@ -86,17 +69,13 @@ const ObjectItem = ({
           ...(visible
             ? { margin: "0 auto", display: "block" }
             : {
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }),
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }),
         }}
       >
-        {visible ? (
-          <VisibilityOffIcon></VisibilityOffIcon>
-        ) : (
-          <FilterListAltIcon></FilterListAltIcon>
-        )}
+        {visible ? <VisibilityOffIcon /> : <FilterListAltIcon />}
       </Button>
 
       {visible && (
@@ -106,50 +85,36 @@ const ObjectItem = ({
             alignItems: "center",
             gap: 1,
             flexDirection: "column",
-            paddingTop: "40px", // Để tránh đè lên button khi visible
+            paddingTop: "40px",
           }}
         >
-          <AccordionGroup
+          <Box
             sx={{
+              backgroundColor: "#EEEEEE",
               maxWidth: 400,
-              height: "auto",
               maxHeight: "400px",
-              alignItems: "center",
-              display: "flex",
-              gap: 1,
               padding: 2,
               overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: 1,
             }}
           >
             {items.map((item, index) => (
-              <Accordion key={index}>
-                <AccordionSummary>{item.name}</AccordionSummary>
-                {item.subItems?.map((subItem, subIndex) => {
-                  const checkboxKey = `${item.name}-${subItem}`;
-                  return (
-                    <AccordionDetails key={subIndex}>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Checkbox
-                          checked={checkedItems[checkboxKey] || false}
-                          onChange={() =>
-                            handleCheckboxChange(
-                              item.name || `id:${index}`,
-                              subItem
-                            )
-                          }
-                        />
-                        {subItem}
-                      </Box>
-                    </AccordionDetails>
-                  );
-                })}
-              </Accordion>
+              <Box
+                key={index}
+                sx={{ display: "flex", alignItems: "center", gap: 1, paddingBottom: 2 }}
+              >
+                <Radio
+                  checked={selectedItem === item.id}
+                  onChange={() => handleRadioChange(item.id || "")}
+                />
+                {item.id}
+              </Box>
             ))}
-          </AccordionGroup>
+          </Box>
 
-          <Button>Save</Button>
+          <Button onClick={handleSave}>Save</Button>
         </Box>
       )}
     </Box>
