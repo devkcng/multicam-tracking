@@ -13,18 +13,13 @@ const ChatBox = () => {
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  let isStarted = false;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Run start chat when load component
-  useEffect(() => {
-    startChat();
-  }, []);
-
   const startChat = async () => {
-    return;
     try {
       const response = await fetch(
         "https://engaged-hagfish-usefully.ngrok-free.app/start_chat",
@@ -43,6 +38,9 @@ const ChatBox = () => {
 
       if (response.status === 200) {
         const data = await response.json();
+
+        // LOG
+        console.log(data);
 
         const assistantMessage: MessageType = {
           id: Date.now() + 1,
@@ -67,6 +65,11 @@ const ChatBox = () => {
   };
 
   const handleSend = async () => {
+    if (!isStarted) {
+      startChat();
+      isStarted = true;
+    }
+
     if (inputValue.trim() === "") return;
 
     const newMessage: MessageType = {
@@ -95,6 +98,9 @@ const ChatBox = () => {
       );
 
       const data = await response.json();
+
+      // LOG
+      console.log(data);
 
       const assistantMessage: MessageType = {
         id: Date.now() + 1,
