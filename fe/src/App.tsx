@@ -1,7 +1,8 @@
 import { Box, Typography } from "@mui/joy";
 import { useEffect, useState } from "react";
+import axios from "axios"; // Import axios
 import FloatingChatButton from "./components/FloatingChatButton";
-import ObjectItem from "./components/ObjectItem";
+import ObjectItem, { ObjectProps } from "./components/ObjectItem"; // Import ObjectProps
 import SearchBar from "./components/SearchBar";
 import TrackingSection from "./components/TrackingSection";
 import apiClient from "./config";
@@ -10,10 +11,12 @@ import { VideoCardProps } from "./components/VideoCard";
 function App() {
   const [videos, setVideos] = useState<VideoCardProps[]>([]);
   const [originalVideos, setOriginalVideos] = useState<VideoCardProps[]>([]);
+  const [items, setItems] = useState<ObjectProps[]>([]); // State cho items của ObjectItem
   const [error, setError] = useState<string | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
+  // Fetch videos
   useEffect(() => {
     const fetchVideos = async () => {
       try {
@@ -31,7 +34,7 @@ function App() {
         }));
 
         setVideos(videoData);
-        setOriginalVideos(videoData); // Store original videos for reset
+        setOriginalVideos(videoData);
       } catch (error: any) {
         setError(error.message || "Failed to fetch data");
         console.error("Error fetching data:", error);
@@ -40,9 +43,30 @@ function App() {
     fetchVideos();
   }, []);
 
+  // Fetch person IDs for ObjectItem
+  useEffect(() => {
+    const fetchPersonIds = async () => {
+      try {
+        const response = await apiClient.get("all_person_ids");
+        console.log("Person IDs data:", response.data);
+
+        // Chuyển đổi dữ liệu từ all_ids thành mảng ObjectProps
+        const personItems = response.data.all_ids.map((id: string) => ({
+          id, // Tạo object với thuộc tính id
+        }));
+
+        setItems(personItems);
+      } catch (error: any) {
+        setError(error.message || "Failed to fetch person IDs");
+        console.error("Error fetching person IDs:", error);
+      }
+    };
+    fetchPersonIds();
+  }, []);
+
   const handleSearch = async (searchTerm: string) => {
     if (!searchTerm.trim()) {
-      setVideos(originalVideos); // Reset to original videos when search is empty
+      setVideos(originalVideos);
       return;
     }
 
@@ -55,7 +79,6 @@ function App() {
       });
       console.log("check data: ", response.data[2].time_sec);
       console.log("check data: ", response.data[2].video_url);
-      // Transform search results to match your video format
       const searchVideoData = response.data.map((item: any) => ({
         title: item.camera_id,
         videoSrc: item.video_url,
@@ -74,6 +97,12 @@ function App() {
     }
   };
 
+  // Hàm xử lý khi chọn một person ID từ ObjectItem
+  const handleObjectSelect = (selectedId: string) => {
+    console.log("Selected person ID:", selectedId);
+    // Bạn có thể thêm logic để xử lý selectedId, ví dụ: lọc videos dựa trên ID
+  };
+
   return (
     <>
       <Box
@@ -87,7 +116,7 @@ function App() {
         }}
       >
         <Typography level="h1" sx={{ textAlign: "center" }}>
-          Tracking Assistant
+          Surveillance Assistant
         </Typography>
 
         <Box
@@ -137,7 +166,7 @@ function App() {
               padding: 2,
             }}
           >
-            <ObjectItem />
+            <ObjectItem items={items} onClick={handleObjectSelect} />
           </Box>
         </Box>
       </Box>
